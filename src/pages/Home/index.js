@@ -6,23 +6,19 @@ function Home() {
 
   const navigate = useNavigate();
 
-  const [salary, setSalary] = useState(null);
   const [formData, setFormData] = useState({
-    country: "",
-    ed_level: "",
+    country: "United States of America",
+    ed_level: "Less than a Bachelors",
     years_code: 0,
   });
-
-  const handleInputChange = (event) => {
-    const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
-  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     try {
-      const response = await fetch('http://sua-api-aqui.com/api', {
+      console.log("Dados a serem enviados:", formData);
+
+      const response = await fetch('https://salarypredict.azurewebsites.net/api', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,19 +31,27 @@ function Home() {
       }
 
       const data = await response.json();
-      setSalary(data.prediction);
-      navigate("/predict", { data });
+      if (data && data.prediction) {
+        navigate("/predict", { state: { data } });
+      } else {
+        throw new Error('Resposta da API inválida');
+      }
     } catch (error) {
       console.error('Erro ao processar a solicitação:', error.message);
       navigate("/error", { replace: true });
     }
   };
 
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
   return (
     <Container>
       <h1>Predição de Salário</h1>
-      <Form action="/predict" method="POST" onSubmit={handleSubmit}>
-        <div class="form-control">
+      <Form onSubmit={handleSubmit}>
+        <div className="form-control">
           <label>País:</label>
           <select name="country" required onChange={handleInputChange}>
             <option value="United States of America">Estados Unidos da América</option>
@@ -69,7 +73,7 @@ function Home() {
             <option value="Israel">Israel</option>
           </select>
         </div>
-        <div class="form-control">
+        <div className="form-control">
           <label>Nível de Educação:</label>
           <select name="ed_level" required onChange={handleInputChange}>
             <option value="Less than a Bachelors">Menos que um Bacharelado</option>
@@ -78,7 +82,7 @@ function Home() {
             <option value="Post grad">Pós-graduação</option>
           </select>
         </div>
-        <div class="form-control">
+        <div className="form-control">
           <label>Tempo de atuação como desenvolvedor (em anos):</label>
           <input type="number" name="years_code" min="0" step="any" required onChange={handleInputChange} />
         </div>
